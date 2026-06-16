@@ -1,3 +1,16 @@
+import os
+from flask import Flask, render_template
+
+# 'templates' klasörünü Flask'a manuel olarak tanıtıyoruz
+app = Flask(__name__, template_folder='templates')
+
+@app.route('/')
+def index():
+    # Bu komut, 'templates/index.html' dosyasını arar
+    return render_template('index.html')
+
+if __name__ == '__main__':
+    app.run()
 from flask import Flask, render_template
 
 app = Flask(__name__)
