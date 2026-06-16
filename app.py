@@ -1,3 +1,27 @@
+from flask import Flask, render_template, jsonify, request
+
+app = Flask(__name__)
+
+# ANA SAYFAYI GÖSTEREN KISIM
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# API ROTALARI (Sitenin verileri buradan çekecek)
+@app.route('/api/user')
+def get_user():
+    return jsonify({
+        "username": "Geliştirici",
+        "credits": 0,
+        "avatar": "https://ui-avatars.com/api/?name=User",
+        "role": "Kullanıcı",
+        "bio": "Yeni başlayan",
+        "uploaded_projects": [],
+        "purchased_projects": []
+    })
+
+if __name__ == '__main__':
+    app.run()
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
