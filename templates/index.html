@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeTrade | Enterprise Code & Resource Distribution</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #050507; color: #E4E4E7; overflow-x: hidden; }
+        .ultra-nav { border-b: 1px solid rgba(255, 255, 255, 0.03); background: rgba(8, 8, 11, 0.75); backdrop-filter: blur(24px); }
+        .premium-card { background: #0A0A0F; border: 1px solid #14141F; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .premium-card:hover { border-color: #2563EB; box-shadow: 0 0 40px rgba(37, 99, 235, 0.12); transform: translateY(-2px); }
+        .glass-panel { background: rgba(10, 10, 14, 0.9); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); }
+        .input-dark { background: #0E0E14; border: 1px solid #1E1E2C; color: white; transition: all 0.2s; }
+        .input-dark:focus { border-color: #2563EB; outline: none; box-shadow: 0 0 10px rgba(37, 99, 235, 0.2); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <div id="toastContainer" class="fixed top-6 right-6 z-[300] space-y-3 pointer-events-none"></div>
+
+    <nav class="ultra-nav sticky top-0 z-40 px-8 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-12">
+            <span class="text-xl font-extrabold tracking-tight text-white cursor-pointer" onclick="resetFilters()">Code<span class="text-blue-500">Trade.</span></span>
+            
+            <div class="relative">
+                <button onclick="toggleCategoryMenu()" class="bg-[#0F0F16] hover:bg-[#161622] border border-[#1E1E2C] text-gray-200 px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-blue-500"></i> Mimari Segmentler <i class="fa-solid fa-chevron-down text-[10px] ml-1 text-gray-500"></i>
+                </button>
+                
+                <div id="matrixCategoryMenu" class="absolute left-0 mt-3 w-[600px] bg-[#07070B] border border-[#1A1A26] rounded-2xl p-6 hidden shadow-2xl z-50">
+                    <h4 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Gelişmiş Filtreleme Sistemi</h4>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <div class="text-xs font-black text-white mb-2"><i class="fa-solid fa-code text-blue-500 mr-2"></i>Yazılım & Algoritma</div>
+                            <div class="space-y-2 text-xs text-gray-400 pl-6">
+                                <button onclick="selectCategory('Yazılım Geliştirme', 'Web (Frontend/Backend)')" class="block hover:text-white transition">Web Mimari (Python, JS, HTML)</button>
+                                <button onclick="selectCategory('Yazılım Geliştirme', 'Mobil Uygulama')" class="block hover:text-white transition">Mobil Geliştirme (Flutter, Swift)</button>
+                                <button onclick="selectCategory('Yazılım Geliştirme', 'Oyun Programlama')" class="block hover:text-white transition">Oyun Motorları & C#</button>
+                                <button onclick="selectCategory('Yazılım Geliştirme', 'Veri Bilimi & AI')" class="block hover:text-white transition">Yapay Zekâ & Python Veri</button>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-xs font-black text-white mb-2"><i class="fa-solid fa-graduation-cap text-emerald-500 mr-2"></i>Akademik & Ders Havuzu</div>
+                            <div class="space-y-2 text-xs text-gray-400 pl-6">
+                                <button onclick="selectCategory('Ev Ödevi', 'Kaynak Kodlama')" class="block hover:text-white transition">Ödev - Saf Kod Dosyaları</button>
+                                <button onclick="selectCategory('Ev Ödevi', 'Araştırma & Rapor')" class="block hover:text-white transition">Ödev - Araştırma & PDF Raporlar</button>
+                                <button onclick="selectCategory('Ev Ödevi', 'Donanım & Mimari')" class="block hover:text-white transition">BTT & Donanım Katmanları</button>
+                                <button onclick="selectCategory('Sunum', 'Ağ Teknolojileri')" class="block hover:text-white transition">Ağ Cihazları Sunumları (PPTX)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="relative w-96 hidden md:block">
+            <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-gray-600 text-xs"></i>
+            <input type="text" id="globalSearch" onkeyup="triggerSearch()" placeholder="Sistem genelinde akıllı arama..." class="w-full bg-[#0B0B10] border border-[#171724] rounded-xl py-3 pl-11 pr-4 text-xs focus:outline-none focus:border-blue-500 text-white transition">
+        </div>
+
+        <div class="flex items-center gap-6">
+            <button onclick="openUploadModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-[0_0_30px_rgba(37,99,235,0.2)]">
+                <i class="fa-solid fa-circle-plus"></i> Proje Dağıt
+            </button>
+            <div class="flex items-center gap-3 bg-[#0A0A10] border border-[#151522] p-1.5 rounded-xl cursor-pointer hover:bg-[#12121E] transition" onclick="openProfileDrawer()">
+                <img id="navAvatar" src="" class="w-8 h-8 rounded-lg object-cover">
+                <div class="text-left pr-2">
+                    <p id="navUsername" class="text-xs font-bold text-white">...</p>
+                    <p class="text-[10px] text-emerald-400 font-extrabold"><span id="navCredits">0</span> CR</p>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="onboardingBanner" class="bg-gradient-to-r from-blue-950/40 via-[#0B0B12] to-transparent border-b border-blue-500/10 px-8 py-4 flex justify-between items-center transition-all duration-300">
+        <div class="flex items-center gap-4">
+            <div class="bg-blue-500/10 p-2.5 rounded-xl border border-blue-500/20 text-blue-400 hidden sm:block">
+                <i class="fa-solid fa-circle-nodes text-md"></i>
+            </div>
+            <div>
+                <h3 class="text-xs font-black text-white tracking-wide uppercase">P2P Bilgi Dağıtım ve Kaynak Ağı</h3>
+                <p class="text-xs text-gray-400 mt-0.5">Projelerini, ödevlerini ve kod dökümanlarını güvenle paylaş. Sadece diğer geliştiriciler senin kaynağını indirdikçe kredi kazanırsın.</p>
+            </div>
+        </div>
+        <button onclick="document.getElementById('onboardingBanner').remove()" class="text-gray-500 hover:text-white text-sm px-2 py-1"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <main class="flex-grow max-w-7xl mx-auto w-full px-8 py-10">
+        <div class="mb-10 flex justify-between items-center">
+            <div>
+                <span id="activeTag" class="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-500/10 px-2.5 py-1 rounded-md mb-2 inline-block">Global Matrix</span>
+                <h2 id="viewHeading" class="text-xl font-extrabold text-white">Yayınlanan Son Çözümler</h2>
+            </div>
+            <div id="filterIndicator" class="text-xs text-gray-500 hidden">Filtre Kilitli <button onclick="resetFilters()" class="text-red-400 ml-2 hover:underline">Sıfırla</button></div>
+        </div>
+
+        <div id="matrixGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+    </main>
+
+    <div id="profileDrawer" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeProfileDrawer()"></div>
+        <div class="absolute right-0 top-0 h-full w-[450px] bg-[#060609] border-l border-[#1A1A26] p-8 flex flex-col justify-between overflow-y-auto">
+            <div class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-black uppercase tracking-wider text-white"><i class="fa-solid fa-fingerprint text-blue-500 mr-2"></i> Geliştirici Kimliği</h3>
+                    <button onclick="closeProfileDrawer()" class="text-gray-500 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                
+                <div class="bg-[#0B0B12] p-5 rounded-2xl border border-[#161626] relative overflow-hidden">
+                    <div class="flex items-start gap-4">
+                        <img id="drawerAvatar" src="" class="w-14 h-14 rounded-xl object-cover border border-blue-500/20 shadow-xl">
+                        <div class="space-y-0.5 flex-grow">
+                            <h4 id="drawerRealName" class="text-sm font-black text-white">-</h4>
+                            <p class="text-xs text-gray-400">@<span id="drawerUsername">-</span></p>
+                            <p id="drawerRole" class="text-[10px] text-blue-400 font-bold uppercase tracking-wider mt-1">-</p>
+                        </div>
+                        <button onclick="openEditProfile()" class="text-gray-500 hover:text-white bg-white/5 p-2 rounded-lg transition text-xs"><i class="fa-solid fa-user-gear"></i> Düzenle</button>
+                    </div>
+                    <p id="drawerBio" class="text-xs text-gray-400 mt-4 leading-relaxed border-t border-white/5 pt-3">-</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <h5 class="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-2">Dağıtımdaki Kaynaklarım</h5>
+                        <div id="myUploads" class="space-y-2"></div>
+                    </div>
+                    <div>
+                        <h5 class="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-2">Lisanslı Kitaplığım</h5>
+                        <div id="myPurchases" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-[#0B0B10] border border-[#1A1A28] p-4 rounded-xl text-center mt-6">
+                <span class="text-[10px] bg-blue-500/10 text-blue-400 font-bold px-3 py-1 rounded-md inline-block"><i class="fa-brands fa-google mr-1"></i> Google Cloud Sync Active</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="editProfileModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md rounded-2xl p-6 space-y-4">
+            <h3 class="text-sm font-black uppercase text-white"><i class="fa-solid fa-sliders text-blue-500 mr-2"></i> Kimlik Verilerini Düzenle</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Kullanıcı Adı (Handle)</label>
+                    <input type="text" id="editUsername" class="w-full input-dark rounded-xl p-3 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Gerçek İsim & Soyisim</label>
+                    <input type="text" id="editRealName" class="w-full input-dark rounded-xl p-3 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Profil Fotoğrafı (URL)</label>
+                    <input type="text" id="editAvatar" class="w-full input-dark rounded-xl p-3 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Biyografi & Vizyon</label>
+                    <textarea id="editBio" rows="3" class="w-full input-dark rounded-xl p-3 text-xs resize-none"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeEditProfile()" class="px-4 py-2 text-xs text-gray-400 hover:text-white">İptal</button>
+                <button onclick="saveProfileData()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition">Matrise İşle</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="uploadModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#07070B] border border-[#161624] w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl">
+            <div class="px-8 py-5 border-b border-[#161624] flex justify-between items-center bg-[#0C0C12]">
+                <h3 class="text-sm font-black uppercase text-white"><i class="fa-solid fa-server text-blue-500 mr-2"></i> Havuza Yeni Enjeksiyon</h3>
+                <button onclick="closeUploadModal()" class="text-gray-500 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <form id="uploadForm" onsubmit="executePublish(event)" class="p-8 space-y-5">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Kaynak Başlığı</label>
+                        <input type="text" id="formTitle" required class="w-full input-dark rounded-xl p-3 text-xs" placeholder="Örn: Python Nesne Tabanlı Programlama Otomasyon Paketi">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Mimari Detay ve Açıklama</label>
+                        <textarea id="formDesc" required rows="3" class="w-full input-dark rounded-xl p-3 text-xs resize-none" placeholder="Projenin işleyiş algoritmalarını ve amacını buraya detaylandırın..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Segment</label>
+                        <select id="formCategory" onchange="adaptSubcategories()" class="w-full input-dark rounded-xl p-3 text-xs cursor-pointer">
+                            <option>Yazılım Geliştirme</option>
+                            <option>Program</option>
+                            <option>Ev Ödevi</option>
+                            <option>Sunum</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Alt Segment (Sub-Domain)</label>
+                        <select id="formSubcategory" class="w-full input-dark rounded-xl p-3 text-xs cursor-pointer"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Teknik Uzantı / Format</label>
+                        <select id="formFileType" class="w-full input-dark rounded-xl p-3 text-xs cursor-pointer">
+                            <option value="PY">Python (.py)</option>
+                            <option value="ZIP/RAR">ZIP / RAR (Proje Paketi)</option>
+                            <option value="PDF">PDF Dökümanı</option>
+                            <option value="PPTX">PowerPoint Sunumu</option>
+                            <option value="CPP">C++ Kaynak Kodu (.cpp)</option>
+                            <option value="CS">C# Sınıf Dosyası (.cs)</option>
+                            <option value="JS">JavaScript Skripti (.js)</option>
+                            <option value="HTML/CSS">HTML / CSS Tasarımı</option>
+                            <option value="JAVA">Java Sınıfı (.java)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Lisans Bedeli (Kredi Tutarı)</label>
+                        <input type="number" id="formCost" min="1" max="15" value="2" class="w-full input-dark rounded-xl p-3 text-xs">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Dosya / Klasör Enjeksiyonu</label>
+                    <div class="border-2 border-dashed border-[#1E1E2C] rounded-xl p-6 text-center bg-[#09090D] hover:border-blue-500 transition cursor-pointer relative">
+                        <input type="file" id="fileEngine" multiple webkitdirectory directory onchange="handleFileEngine(this)" class="absolute inset-0 opacity-0 cursor-pointer">
+                        <i class="fa-solid fa-folder-tree text-2xl text-gray-600 mb-2" id="uploadIcon"></i>
+                        <p class="text-xs text-gray-400 font-medium" id="uploadStatusText">Sistemden klasör veya çoklu dosya seçmek için tıklayın</p>
+                        <p class="text-[10px] text-gray-600 mt-1">Gelişmiş WebKit FileAPI ile dizin yapısı taranır.</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-[#14141F]">
+                    <button type="button" onclick="closeUploadModal()" class="px-5 py-2 text-xs text-gray-400 hover:text-white">İptal</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl text-xs font-bold transition">Havuzda Sıraya Al</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let selectedCat = '', selectedSub = '', simulatedFileStructure = 'root_package.zip';
+
+        const subTaxonomy = {
+            'Yazılım Geliştirme': ['Web (Frontend/Backend)', 'Mobil Uygulama', 'Oyun Programlama', 'Veri Bilimi & AI'],
+            'Program': ['Sistem Araçları', 'Veritabanı Yönetimi'],
+            'Ev Ödevi': ['Kaynak Kodlama', 'Araştırma & Rapor', 'Donanım & Mimari'],
+            'Sunum': ['Ağ Teknolojileri', 'Genel CS Teori']
+        };
+
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-xl text-xs font-bold border flex items-center gap-3 transition-all duration-300 transform translate-y-2 pointer-events-auto ${type === 'success' ? 'bg-emerald-950/90 border-emerald-500/20 text-emerald-400' : 'bg-red-950/90 border-red-500/20 text-red-400'}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-xmark'}"></i> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3500);
+        }
+
+        async function refreshData() {
+            const res = await fetch('/api/user');
+            const user = await res.json();
+            
+            document.getElementById('navUsername').innerText = user.username;
+            document.getElementById('navCredits').innerText = user.credits;
+            document.getElementById('navAvatar').src = user.avatar;
+            document.getElementById('drawerAvatar').src = user.avatar;
+            document.getElementById('drawerUsername').innerText = user.username;
+            document.getElementById('drawerRealName').innerText = user.real_name;
+            document.getElementById('drawerRole').innerText = user.role;
+            document.getElementById('drawerBio').innerText = user.bio;
+            document.getElementById('drawerJoin').innerText = `Matris Kaydı: ${user.join_date}`;
+
+            // Sync Lists
+            const upContainer = document.getElementById('myUploads');
+            upContainer.innerHTML = user.uploaded_projects.length ? user.uploaded_projects.map(p => `
+                <div class="bg-[#0B0B12] p-3 rounded-xl border border-[#161624] text-xs flex justify-between items-center text-white">
+                    <span class="font-medium">${p.title}</span>
+                    <span class="text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded text-[10px] font-bold">${p.downloads} İndirme</span>
+                </div>`).join('') : '<p class="text-[10px] text-gray-600">Henüz ağa veri enjekte edilmemiş.</p>';
+
+            const purContainer = document.getElementById('myPurchases');
+            purContainer.innerHTML = user.purchased_projects.length ? user.purchased_projects.map(p => `
+                <div class="bg-[#0B0B12] p-3 rounded-xl border border-[#161624] text-xs text-gray-300 flex items-center gap-2">
+                    <i class="fa-solid fa-file-shield text-blue-500"></i> ${p.title} (${p.file_type})
+                </div>`).join('') : '<p class="text-[10px] text-gray-600">Kitaplıkta doğrulanmış lisans yok.</p>';
+        }
+
+        async function loadMarket(cat = '', subcat = '', search = '') {
+            const res = await fetch(`/api/files?category=${encodeURIComponent(cat)}&subcategory=${encodeURIComponent(subcat)}&search=${encodeURIComponent(search)}`);
+            const data = await res.json();
+            const grid = document.getElementById('matrixGrid');
+            grid.innerHTML = '';
+
+            if(!data.length) {
+                grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-600 text-xs font-semibold">Kriterlere uygun aktif veri paketine ulaşılamadı.</div>`;
+                return;
+            }
+
+            data.forEach(f => {
+                let icon = 'fa-file-code text-blue-400';
+                if(f.file_type === 'PDF') icon = 'fa-file-pdf text-red-400';
+                else if(f.file_type === 'PPTX') icon = 'fa-file-powerpoint text-orange-400';
+                
+                grid.innerHTML += `
+                    <div class="premium-card rounded-2xl p-6 flex flex-col justify-between h-full">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-gray-400 bg-[#12121A] border border-[#1F1F2F] px-2.5 py-1 rounded-md">${f.subcategory}</span>
+                                <span class="text-[10px] text-gray-500 font-bold"><i class="fa-solid ${icon} mr-1"></i> ${f.file_type}</span>
+                            </div>
+                            <h3 class="text-sm font-black text-white mb-2 leading-snug">${f.title}</h3>
+                            <p class="text-xs text-gray-400 line-clamp-2 leading-relaxed">${f.description}</p>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-[#141422] flex justify-between items-center">
+                            <div class="text-sm font-black text-blue-500">${f.cost} <span class="text-[10px] text-gray-500 font-bold">CR</span></div>
+                            <button onclick="executeDownload(${f.id})" class="bg-[#111118] hover:bg-blue-600 hover:text-white border border-[#1F1F2F] hover:border-blue-600 text-gray-300 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+                                <i class="fa-solid fa-shield-halved"></i> Lisans Al
+                            </button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function handleFileEngine(input) {
+            if(input.files.length > 0) {
+                simulatedFileStructure = input.files[0].webkitRelativePath || input.files[0].name;
+                document.getElementById('uploadIcon').className = "fa-solid fa-circle-check text-2xl text-emerald-400 mb-2";
+                document.getElementById('uploadStatusText').innerText = `${input.files.length} Öğe / Klasör Yapısı Tamamen Paketlendi`;
+                document.getElementById('uploadStatusText').className = "text-xs text-emerald-400 font-bold";
+            }
+        }
+
+        function toggleCategoryMenu() { document.getElementById('matrixCategoryMenu').classList.toggle('hidden'); }
+        
+        function selectCategory(cat, subcat) {
+            selectedCat = cat; selectedSub = subcat;
+            document.getElementById('activeTag').innerText = cat;
+            document.getElementById('viewHeading').innerText = subcat;
+            document.getElementById('filterIndicator').classList.remove('hidden');
+            document.getElementById('matrixCategoryMenu').classList.add('hidden');
+            loadMarket(cat, subcat);
+        }
+
+        function resetFilters() {
+            selectedCat = ''; selectedSub = '';
+            document.getElementById('activeTag').innerText = 'Global Matrix';
+            document.getElementById('viewHeading').innerText = 'Yayınlanan Son Çözümler';
+            document.getElementById('filterIndicator').classList.add('hidden');
+            document.getElementById('globalSearch').value = '';
+            loadMarket();
+        }
+
+        function triggerSearch() { loadMarket(selectedCat, selectedSub, document.getElementById('globalSearch').value); }
+        
+        function openProfileDrawer() { document.getElementById('profileDrawer').classList.remove('hidden'); }
+        function closeProfileDrawer() { document.getElementById('profileDrawer').classList.add('hidden'); }
+        
+        function openEditProfile() {
+            document.getElementById('editUsername').value = document.getElementById('drawerUsername').innerText;
+            document.getElementById('editRealName').value = document.getElementById('drawerRealName').innerText;
+            document.getElementById('editAvatar').value = document.getElementById('drawerAvatar').src;
+            document.getElementById('editBio').value = document.getElementById('drawerBio').innerText;
+            document.getElementById('editProfileModal').classList.remove('hidden');
+        }
+        function closeEditProfile() { document.getElementById('editProfileModal').classList.add('hidden'); }
+
+        async function saveProfileData() {
+            const payload = {
+                username: document.getElementById('editUsername').value,
+                real_name: document.getElementById('editRealName').value,
+                avatar: document.getElementById('editAvatar').value,
+                bio: document.getElementById('editBio').value
+            };
+            const res = await fetch('/api/user/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const r = await res.json();
+            showToast(r.message); closeEditProfile(); refreshData();
+        }
+
+        function openUploadModal() { document.getElementById('uploadModal').classList.remove('hidden'); adaptSubcategories(); }
+        function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); }
+
+        function adaptSubcategories() {
+            const cat = document.getElementById('formCategory').value;
+            document.getElementById('formSubcategory').innerHTML = subTaxonomy[cat].map(s => `<option>${s}</option>`).join('');
+        }
+
+        async function executePublish(e) {
+            e.preventDefault();
+            const payload = {
+                title: document.getElementById('formTitle').value,
+                description: document.getElementById('formDesc').value,
+                category: document.getElementById('formCategory').value,
+                subcategory: document.getElementById('formSubcategory').value,
+                file_type: document.getElementById('formFileType').value,
+                cost: document.getElementById('formCost').value,
+                structure: simulatedFileStructure
+            };
+            const res = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const r = await res.json();
+            showToast(r.message); closeUploadModal(); refreshData(); loadMarket();
+            document.getElementById('uploadForm').reset();
+            document.getElementById('uploadIcon').className = "fa-solid fa-folder-tree text-2xl text-gray-600 mb-2";
+            document.getElementById('uploadStatusText').innerText = "Sistemden klasör veya çoklu dosya seçmek için tıklayın";
+            document.getElementById('uploadStatusText').className = "text-xs text-gray-400 font-medium";
+        }
+
+        async function executeDownload(id) {
+            const res = await fetch('/api/download', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_id: id }) });
+            const r = await res.json();
+            showToast(r.message, r.success ? 'success' : 'error');
+            if(r.success) { refreshData(); loadMarket(selectedCat, selectedSub); }
+        }
+
+        // Initialize Core Engine
+        refreshData(); loadMarket();
+    </script>
+</body>
+</html>
